@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Toyota Avanza — 3D Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-1:      #eef1f3;
+    --bg-2:      #dde2e6;
+    --card-line: rgba(20,30,40,0.10);
+    --ink:       #16202a;
+    --ink-soft:  #5c6773;
+    --teal:      #0fb6ab;
+    --white:     #ffffff;
+    --font: 'Plus Jakarta Sans', sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    width:100%; height:100%;
+    background:var(--bg-1);
+    color:var(--ink);
+    font-family:var(--font);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  #app{position:relative; width:100vw; height:100vh;}
+  #canvas-wrap{position:absolute; inset:0;}
+  canvas{display:block; outline:none;}
+
+  /* ---------- overlay info (harga / nama / spesifikasi) ---------- */
+  #info-overlay{
+    position:absolute;
+    top:0; left:0; right:0;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    padding:34px 76px 0 40px;
+    z-index:15;
+    pointer-events:none;
+  }
+  .info-left{
+    display:flex;
+    align-items:baseline;
+    gap:28px;
+    flex-wrap:wrap;
+  }
+  #price{
+    font-size:26px;
+    font-weight:800;
+    color:var(--teal);
+    letter-spacing:-0.01em;
+    white-space:nowrap;
+  }
+  .title-block{white-space:nowrap;}
+  #model-title{
+    font-size:24px;
+    font-weight:800;
+    color:var(--ink);
+    letter-spacing:-0.01em;
+    line-height:1.15;
+  }
+  #model-subtitle{
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  #specs{
+    font-size:11.5px;
+    font-weight:500;
+    color:var(--ink-soft);
+    line-height:1.65;
+    text-align:right;
+    white-space:nowrap;
+    padding-top:2px;
+  }
+  #specs .row .k{color:var(--ink-soft);}
+  #specs .row .v{color:var(--ink); font-weight:600;}
+
+  @media (max-width: 860px){
+    #info-overlay{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:10px;
+      padding:24px 60px 0 20px;
+    }
+    #specs{text-align:left;}
+  }
+
+  /* ---------- tombol tutup ---------- */
+  #close-btn{
+    position:absolute;
+    top:28px; right:28px;
+    width:34px; height:34px;
+    border:1.5px solid rgba(20,30,40,0.28);
+    background:rgba(255,255,255,0.7);
+    color:var(--ink);
+    font-size:15px;
+    font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    z-index:20;
+    transition:background 0.15s ease, transform 0.15s ease;
+  }
+  #close-btn:hover{background:var(--white); transform:scale(1.05);}
+  #close-btn.hidden{display:none;}
+
+  /* ---------- drop overlay (tampil hanya kalau belum ada model) ---------- */
+  #dropzone{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    z-index:10;
+  }
+  #dropzone.hidden{display:none;}
+  #dropzone .inner{
+    text-align:center;
+    cursor:pointer;
+    padding:30px 40px;
+  }
+  #dropzone h1{
+    font-size:18px;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:6px;
+  }
+  #dropzone p{
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  #dropzone.dragover .inner h1{color:var(--teal);}
+
+  #file-input, #texture-input{display:none;}
+
+  /* ---------- panel pengaturan (disembunyikan, dibuka lewat gear) ---------- */
+  #gear-btn{
+    position:absolute;
+    bottom:24px; right:24px;
+    width:38px; height:38px;
+    border-radius:50%;
+    border:1px solid rgba(20,30,40,0.18);
+    background:rgba(255,255,255,0.75);
+    color:var(--ink-soft);
+    font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    z-index:25;
+    transition:background 0.15s ease, color 0.15s ease;
+  }
+  #gear-btn:hover{background:var(--white); color:var(--ink);}
+
+  #settings-panel{
+    position:absolute;
+    bottom:72px; right:24px;
+    width:236px;
+    background:rgba(255,255,255,0.94);
+    backdrop-filter:blur(6px);
+    border:1px solid var(--card-line);
+    border-radius:12px;
+    box-shadow:0 10px 30px rgba(20,30,40,0.12);
+    padding:14px;
+    z-index:25;
+    display:none;
+    flex-direction:column;
+    gap:8px;
+  }
+  #settings-panel.open{display:flex;}
+  #settings-panel .label{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:6px 0 2px;
+  }
+  #settings-panel .label:first-child{margin-top:0;}
+  .set-btn{
+    width:100%;
+    background:var(--bg-1);
+    border:1px solid var(--card-line);
+    color:var(--ink);
+    font-family:var(--font);
+    font-size:12px;
+    font-weight:600;
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    text-align:left;
+    transition:background 0.15s ease, border-color 0.15s ease;
+  }
+  .set-btn:hover{background:var(--white); border-color:var(--teal);}
+  .set-btn.on{background:rgba(15,182,171,0.12); border-color:var(--teal); color:#0a7f77;}
+  #tex-status{
+    font-size:10.5px;
+    color:var(--ink-soft);
+    line-height:1.5;
+  }
+  #tex-status.ok{color:var(--teal); font-weight:600;}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:absolute;
+    bottom:24px; left:50%;
+    transform:translateX(-50%);
+    background:rgba(255,255,255,0.95);
+    border:1px solid var(--card-line);
+    border-radius:10px;
+    padding:9px 18px;
+    font-size:12px;
+    font-weight:600;
+    color:var(--ink-soft);
+    box-shadow:0 6px 20px rgba(20,30,40,0.12);
+    z-index:30;
+    display:none;
+    align-items:center; gap:10px;
+  }
+  #toast.show{display:flex;}
+  #toast.error{color:#c1443c; border-color:rgba(193,68,60,0.3);}
+  #toast .spin{
+    width:10px; height:10px;
+    border:2px solid rgba(20,30,40,0.15);
+    border-top-color:var(--teal);
+    border-radius:50%;
+    animation:spin 0.8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="canvas-wrap"></div>
+
+  <div id="info-overlay">
+    <div class="info-left">
+      <div id="price">Rp 172.000.000</div>
+      <div class="title-block">
+        <div id="model-title">Toyota Avanza</div>
+        <div id="model-subtitle">2021 - 1.3 G M/T</div>
+      </div>
+    </div>
+    <div id="specs">
+      <div class="row"><span class="k">Transmisi</span> : <span class="v">Manual</span></div>
+      <div class="row"><span class="k">Bahan Bakar</span> : <span class="v">Bensin</span></div>
+      <div class="row"><span class="k">Kapasitas</span> : <span class="v">6 kursi</span></div>
+      <div class="row"><span class="k">Warna</span> : <span class="v">Hitam</span></div>
+      <div class="row"><span class="k">Jarak Tempuh</span> : <span class="v">45.800 km</span></div>
+      <div class="row"><span class="k">Pajak</span> : <span class="v">03/2027</span></div>
+    </div>
+  </div>
+
+  <button id="close-btn">✕</button>
+
+  <div id="dropzone" class="hidden">
+    <div class="inner" id="drop-inner">
+      <h1>Letakkan model FBX di sini</h1>
+      <p>atau klik untuk memilih file · .FBX</p>
+    </div>
+  </div>
+
+  <input type="file" id="file-input" accept=".fbx" />
+  <input type="file" id="texture-input" multiple webkitdirectory directory />
+
+  <button id="gear-btn" title="Pengaturan tampilan">⚙</button>
+  <div id="settings-panel">
+    <div class="label">Model</div>
+    <button class="set-btn" id="load-btn">Ganti file FBX…</button>
+
+    <div class="label">Tekstur</div>
+    <button class="set-btn" id="btn-load-textures">Muat folder tekstur…</button>
+    <div id="tex-status">Memeriksa tekstur bawaan…</div>
+
+    <div class="label">Tampilan</div>
+    <button class="set-btn on" id="btn-rotate">Auto-putar</button>
+    <button class="set-btn" id="btn-wireframe">Wireframe</button>
+    <button class="set-btn" id="btn-reset">Reset kamera</button>
+  </div>
+
+  <div id="toast"><span class="spin"></span><span id="toast-text">Memuat…</span></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
+const wrap = document.getElementById('canvas-wrap');
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('file-input');
+const textureInput = document.getElementById('texture-input');
+const toast = document.getElementById('toast');
+const toastText = document.getElementById('toast-text');
+const texStatus = document.getElementById('tex-status');
+const closeBtn = document.getElementById('close-btn');
+const gearBtn = document.getElementById('gear-btn');
+const settingsPanel = document.getElementById('settings-panel');
+
+// ---------- texture resolution ----------
+const textureMap = {};
+const textureMapNoExt = {};
+function registerTexture(basename, url) {
+  const lower = basename.toLowerCase();
+  textureMap[lower] = url;
+  textureMapNoExt[lower.replace(/\.[a-z0-9]+$/, '')] = url;
+}
+
+const loadManager = new THREE.LoadingManager();
+loadManager.setURLModifier((url) => {
+  try {
+    const clean = url.split('?')[0].split('#')[0];
+    const base = decodeURIComponent(clean.split(/[\\/]/).pop()).toLowerCase();
+    if (textureMap[base]) return textureMap[base];
+    const noExt = base.replace(/\.[a-z0-9]+$/, '');
+    if (textureMapNoExt[noExt]) return textureMapNoExt[noExt];
+  } catch (e) { /* biarkan url apa adanya */ }
+  return url;
+});
+
+// tekstur PBR bawaan (folder textures/)
+const DEFAULT_PBR_FILES = {
+  basecolor: 'textures/avanza_basecolor.JPEG',
+  metallic:  'textures/avanza_metallic.JPEG',
+  roughness: 'textures/avanza_roughness.JPEG',
+  normal:    'textures/avanza_normal.JPEG',
+  rm:        'textures/avanza_rm.JPEG',
+};
+let defaultPBRTextures = null;
+
+function loadDefaultPBRTextures() {
+  const texLoader = new THREE.TextureLoader(loadManager);
+  const entries = Object.entries(DEFAULT_PBR_FILES);
+  const result = {};
+  let pending = entries.length;
+  return new Promise((resolve) => {
+    if (entries.length === 0) resolve(result);
+    entries.forEach(([key, path]) => {
+      fetch(path, { method: 'HEAD' }).then(res => {
+        if (!res.ok) { pending--; if (pending === 0) resolve(result); return; }
+        registerTexture(path.split('/').pop(), path);
+        texLoader.load(path, (tex) => {
+          if (key === 'basecolor') tex.colorSpace = THREE.SRGBColorSpace;
+          result[key] = tex;
+          pending--;
+          if (pending === 0) resolve(result);
+        }, undefined, () => { pending--; if (pending === 0) resolve(result); });
+      }).catch(() => { pending--; if (pending === 0) resolve(result); });
+    });
+  });
+}
+
+function applyFallbackPBR(object) {
+  if (!defaultPBRTextures || !defaultPBRTextures.basecolor) return;
+  object.traverse(obj => {
+    if (!obj.isMesh) return;
+    const hasOwnColorMap = obj.material && (Array.isArray(obj.material) ? obj.material.some(m => m.map) : obj.material.map);
+    if (hasOwnColorMap) return;
+
+    const mat = new THREE.MeshStandardMaterial({
+      map: defaultPBRTextures.basecolor || null,
+      normalMap: defaultPBRTextures.normal || null,
+      roughness: 1,
+      metalness: 1,
+    });
+    if (defaultPBRTextures.roughness) mat.roughnessMap = defaultPBRTextures.roughness;
+    if (defaultPBRTextures.metallic) mat.metalnessMap = defaultPBRTextures.metallic;
+    if (!mat.roughnessMap && defaultPBRTextures.rm) mat.roughnessMap = defaultPBRTextures.rm;
+    if (!mat.metalnessMap && defaultPBRTextures.rm) mat.metalnessMap = defaultPBRTextures.rm;
+    mat.needsUpdate = true;
+    obj.material = mat;
+  });
+}
+
+let lastModelSource = null;
+
+// ---------- scene setup ----------
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xeef1f3);
+scene.fog = new THREE.Fog(0xeef1f3, 18, 60);
+
+const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 5000);
+camera.position.set(5.2, 2.6, 7.4);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.15;
+wrap.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 2;
+controls.maxDistance = 40;
+controls.maxPolarAngle = Math.PI * 0.53;
+controls.target.set(0, 0.6, 0);
+controls.enablePan = false;
+
+// pencahayaan studio terang, netral (cocok untuk showroom)
+const hemi = new THREE.HemisphereLight(0xffffff, 0xcfd6db, 1.15);
+scene.add(hemi);
+
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(6, 9, 5);
+scene.add(key);
+
+const fill = new THREE.DirectionalLight(0xffffff, 0.55);
+fill.position.set(-6, 4, -4);
+scene.add(fill);
+
+const rim = new THREE.DirectionalLight(0xffffff, 0.5);
+rim.position.set(0, 5, -8);
+scene.add(rim);
+
+// bayangan kontak lembut di bawah model
+function makeShadowTexture() {
+  const size = 256;
+  const cnv = document.createElement('canvas');
+  cnv.width = cnv.height = size;
+  const ctx = cnv.getContext('2d');
+  const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  grad.addColorStop(0, 'rgba(20,30,40,0.32)');
+  grad.addColorStop(0.7, 'rgba(20,30,40,0.12)');
+  grad.addColorStop(1, 'rgba(20,30,40,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(cnv);
+}
+const shadowMat = new THREE.MeshBasicMaterial({ map: makeShadowTexture(), transparent: true, depthWrite: false });
+const shadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shadowMat);
+shadowMesh.rotation.x = -Math.PI / 2;
+shadowMesh.position.y = 0.001;
+scene.add(shadowMesh);
+
+// ---------- state ----------
+let currentModel = null;
+let wireframeOn = false;
+let autoRotate = true;
+
+function showToast(msg, isError = false) {
+  toastText.textContent = msg;
+  toast.classList.add('show');
+  toast.classList.toggle('error', isError);
+  toast.querySelector('.spin').style.display = isError ? 'none' : 'block';
+}
+function hideToast() { toast.classList.remove('show'); }
+
+function clearModel() {
+  if (currentModel) {
+    scene.remove(currentModel);
+    currentModel.traverse(obj => {
+      if (obj.geometry) obj.geometry.dispose();
+      if (obj.material) {
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        mats.forEach(m => m.dispose());
+      }
+    });
+    currentModel = null;
+  }
+}
+
+function frameModel(object) {
+  const box = new THREE.Box3().setFromObject(object);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const center = new THREE.Vector3();
+  box.getCenter(center);
+
+  const maxDim = Math.max(size.x, size.y, size.z) || 1;
+  const scale = 3.4 / maxDim;
+  object.scale.setScalar(scale);
+
+  const box2 = new THREE.Box3().setFromObject(object);
+  const size2 = new THREE.Vector3();
+  const center2 = new THREE.Vector3();
+  box2.getSize(size2);
+  box2.getCenter(center2);
+
+  object.position.x -= center2.x;
+  object.position.z -= center2.z;
+  object.position.y -= box2.min.y;
+
+  const dist = Math.max(size2.length() * 1.5, 5);
+  camera.position.set(dist * 0.62, dist * 0.34, dist * 0.72);
+  controls.target.set(0, size2.y * 0.32, 0);
+  controls.update();
+
+  const shadowScale = Math.max(size2.x, size2.z) * 1.7;
+  shadowMesh.scale.set(shadowScale, shadowScale, 1);
+}
+
+function applyWireframe(object, on) {
+  object.traverse(obj => {
+    if (obj.isMesh && obj.material) {
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      mats.forEach(m => { m.wireframe = on; });
+    }
+  });
+}
+
+function loadFBXFromURL(url, displayName, revokeAfter) {
+  showToast(`Memuat "${displayName}"…`);
+
+  const loader = new FBXLoader(loadManager);
+  loader.setResourcePath('textures/');
+  loader.load(
+    url,
+    (object) => {
+      clearModel();
+
+      object.traverse(obj => {
+        if (obj.isMesh) {
+          obj.castShadow = true;
+          obj.receiveShadow = true;
+          if (!obj.material) {
+            obj.material = new THREE.MeshStandardMaterial({ color: 0x9aa0a6, metalness: 0.2, roughness: 0.6 });
+          }
+        }
+      });
+
+      currentModel = object;
+      scene.add(object);
+      applyFallbackPBR(object);
+      frameModel(object);
+      applyWireframe(object, wireframeOn);
+
+      dropzone.classList.add('hidden');
+      hideToast();
+      if (revokeAfter) URL.revokeObjectURL(url);
+    },
+    (xhr) => {
+      if (xhr.total) {
+        const pct = Math.round((xhr.loaded / xhr.total) * 100);
+        showToast(`Memuat "${displayName}"… ${pct}%`);
+      }
+    },
+    (err) => {
+      console.error(err);
+      showToast('Gagal memuat file. Pastikan ini adalah file .fbx yang valid.', true);
+      if (revokeAfter) URL.revokeObjectURL(url);
+      setTimeout(hideToast, 3500);
+      if (!currentModel) dropzone.classList.remove('hidden');
+    }
+  );
+}
+
+function loadFBXFile(file) {
+  lastModelSource = { kind: 'file', file };
+  const url = URL.createObjectURL(file);
+  loadFBXFromURL(url, file.name, true);
+}
+
+function reloadCurrentModel() {
+  if (!lastModelSource) return;
+  if (lastModelSource.kind === 'file') {
+    const url = URL.createObjectURL(lastModelSource.file);
+    loadFBXFromURL(url, lastModelSource.file.name, true);
+  } else {
+    loadFBXFromURL(DEFAULT_MODEL_URL, DEFAULT_MODEL_NAME, false);
+  }
+}
+
+// muat tekstur PBR bawaan di latar belakang
+loadDefaultPBRTextures().then(res => {
+  defaultPBRTextures = res;
+  if (res.basecolor) {
+    texStatus.textContent = 'Tekstur bawaan (Avanza) aktif';
+    texStatus.classList.add('ok');
+  } else {
+    texStatus.textContent = 'Belum ada tekstur dimuat';
+  }
+  if (currentModel) applyFallbackPBR(currentModel);
+});
+
+// muat model bawaan otomatis
+const DEFAULT_MODEL_URL = 'model.fbx';
+const DEFAULT_MODEL_NAME = 'model.fbx';
+fetch(DEFAULT_MODEL_URL, { method: 'HEAD' })
+  .then(res => {
+    if (res.ok) {
+      lastModelSource = { kind: 'default' };
+      loadFBXFromURL(DEFAULT_MODEL_URL, DEFAULT_MODEL_NAME, false);
+    } else {
+      dropzone.classList.remove('hidden');
+    }
+  })
+  .catch(() => { dropzone.classList.remove('hidden'); });
+
+// ---------- interactions ----------
+function openFilePicker() { fileInput.click(); }
+
+document.getElementById('load-btn').addEventListener('click', openFilePicker);
+document.getElementById('drop-inner').addEventListener('click', openFilePicker);
+
+fileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) loadFBXFile(file);
+  fileInput.value = '';
+});
+
+['dragenter','dragover'].forEach(evt => {
+  window.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('hidden');
+    dropzone.classList.add('dragover');
+  });
+});
+['dragleave','drop'].forEach(evt => {
+  window.addEventListener(evt, (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (evt === 'drop') {
+      const file = e.dataTransfer.files[0];
+      if (file && file.name.toLowerCase().endsWith('.fbx')) {
+        loadFBXFile(file);
+      } else if (file) {
+        showToast('Format tidak didukung. Gunakan file .fbx', true);
+        setTimeout(hideToast, 3000);
+        if (!currentModel) dropzone.classList.remove('hidden');
+      }
+    } else if (!currentModel) {
+      dropzone.classList.remove('hidden');
+    }
+  });
+});
+
+document.getElementById('btn-load-textures').addEventListener('click', () => textureInput.click());
+textureInput.addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  const imageExt = /\.(png|jpe?g|tga|bmp|tiff?|webp|gif|dds|ktx2?)$/i;
+  let added = 0;
+  files.forEach(f => {
+    if (!imageExt.test(f.name)) return;
+    registerTexture(f.name, URL.createObjectURL(f));
+    added++;
+  });
+  if (added === 0) {
+    texStatus.textContent = 'Tidak ada file gambar ditemukan';
+    texStatus.classList.remove('ok');
+    return;
+  }
+  texStatus.textContent = `${added} tekstur dimuat — memuat ulang…`;
+  texStatus.classList.add('ok');
+  reloadCurrentModel();
+  textureInput.value = '';
+});
+
+document.getElementById('btn-wireframe').addEventListener('click', (e) => {
+  wireframeOn = !wireframeOn;
+  e.currentTarget.classList.toggle('on', wireframeOn);
+  if (currentModel) applyWireframe(currentModel, wireframeOn);
+});
+
+document.getElementById('btn-rotate').addEventListener('click', (e) => {
+  autoRotate = !autoRotate;
+  e.currentTarget.classList.toggle('on', autoRotate);
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  if (currentModel) frameModel(currentModel);
+});
+
+gearBtn.addEventListener('click', () => settingsPanel.classList.toggle('open'));
+document.addEventListener('click', (e) => {
+  if (!settingsPanel.contains(e.target) && e.target !== gearBtn && settingsPanel.classList.contains('open')) {
+    settingsPanel.classList.remove('open');
+  }
+});
+
+closeBtn.addEventListener('click', () => {
+  document.getElementById('info-overlay').style.display = 'none';
+  closeBtn.classList.add('hidden');
+});
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ---------- render loop ----------
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  if (autoRotate && currentModel) {
+    currentModel.rotation.y += dt * 0.35;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
