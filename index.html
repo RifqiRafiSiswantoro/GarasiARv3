@@ -227,6 +227,147 @@
     animation:spin 0.8s linear infinite;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ---------- tombol pemicu FAQ ---------- */
+  #faq-btn{
+    position:absolute;
+    bottom:24px; left:24px;
+    display:flex; align-items:center; gap:8px;
+    height:38px;
+    padding:0 16px 0 14px;
+    border-radius:19px;
+    border:1px solid rgba(20,30,40,0.18);
+    background:rgba(255,255,255,0.78);
+    color:var(--ink);
+    font-family:var(--font);
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    z-index:25;
+    transition:background 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+  }
+  #faq-btn:hover{background:var(--white); border-color:var(--teal); transform:translateY(-1px);}
+  #faq-btn .faq-icon{
+    width:18px; height:18px; border-radius:50%;
+    background:var(--teal); color:#fff;
+    font-size:11px; font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  #faq-btn .faq-count{
+    color:var(--ink-soft); font-weight:600; font-size:11px;
+  }
+
+  @media (max-width:520px){
+    #faq-btn span.faq-label-full{display:none;}
+  }
+
+  /* ---------- modal Tanya Jawab Pembeli ---------- */
+  #faq-overlay{
+    position:fixed; inset:0;
+    background:rgba(14,20,26,0.46);
+    backdrop-filter:blur(4px);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:60;
+    padding:26px 16px;
+  }
+  #faq-overlay.open{display:flex;}
+
+  #faq-modal{
+    width:100%; max-width:600px;
+    max-height:min(84vh, 760px);
+    background:var(--white);
+    border-radius:20px;
+    border:1px solid var(--card-line);
+    box-shadow:0 30px 80px rgba(14,20,26,0.35);
+    display:flex; flex-direction:column;
+    overflow:hidden;
+  }
+
+  #faq-header{
+    padding:22px 24px 16px;
+    border-bottom:1px solid var(--card-line);
+    display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+    flex-shrink:0;
+  }
+  #faq-header .htext{flex:1; min-width:0;}
+  #faq-eyebrow{
+    font-size:10.5px; font-weight:800; letter-spacing:0.09em; text-transform:uppercase;
+    color:var(--teal); margin-bottom:5px;
+  }
+  #faq-title{font-size:19px; font-weight:800; color:var(--ink); letter-spacing:-0.01em;}
+  #faq-sub{font-size:12px; color:var(--ink-soft); margin-top:3px; line-height:1.5;}
+  #faq-close{
+    width:30px; height:30px; flex-shrink:0;
+    border:1.5px solid rgba(20,30,40,0.22);
+    background:transparent; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--ink); font-size:14px; cursor:pointer;
+    transition:background 0.15s ease, transform 0.15s ease;
+  }
+  #faq-close:hover{background:var(--bg-1); transform:scale(1.06);}
+
+  #faq-chips{
+    display:flex; gap:6px; overflow-x:auto;
+    padding:12px 24px;
+    border-bottom:1px solid var(--card-line);
+    flex-shrink:0;
+    scrollbar-width:none;
+  }
+  #faq-chips::-webkit-scrollbar{display:none;}
+  .faq-chip{
+    flex-shrink:0; white-space:nowrap;
+    padding:6px 13px; border-radius:999px;
+    border:1px solid var(--card-line); background:var(--bg-1);
+    color:var(--ink-soft); font-family:var(--font);
+    font-size:11.5px; font-weight:700;
+    cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .faq-chip:hover{border-color:var(--teal); color:var(--ink);}
+  .faq-chip.active{background:var(--teal); border-color:var(--teal); color:#fff;}
+
+  #faq-body{overflow-y:auto; padding:4px 24px 24px;}
+  .faq-section{padding-top:16px;}
+  .faq-section-title{
+    font-size:11px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:6px 0 6px;
+    position:sticky; top:0; background:var(--white); z-index:2;
+  }
+  .faq-item{border-bottom:1px solid var(--card-line);}
+  .faq-item:last-child{border-bottom:none;}
+  .faq-q{
+    width:100%; background:none; border:none; text-align:left;
+    display:flex; align-items:center; gap:12px;
+    padding:11px 2px; cursor:pointer; font-family:var(--font);
+  }
+  .faq-q .num{
+    flex-shrink:0; width:20px; height:20px; border-radius:6px;
+    background:var(--bg-1); color:var(--ink-soft);
+    font-size:10.5px; font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+    transition:background 0.15s ease, color 0.15s ease;
+  }
+  .faq-q .qtext{flex:1; font-size:13.5px; font-weight:600; color:var(--ink); line-height:1.4;}
+  .faq-q .chev{
+    flex-shrink:0; color:var(--ink-soft); font-size:11px;
+    transition:transform 0.2s ease, color 0.2s ease;
+  }
+  .faq-item.open .faq-q .chev{transform:rotate(180deg); color:var(--teal);}
+  .faq-item.open .faq-q .num{background:var(--teal); color:#fff;}
+  .faq-a{max-height:0; overflow:hidden; transition:max-height 0.25s ease;}
+  .faq-a p{
+    font-size:12.5px; line-height:1.6; color:var(--ink-soft);
+    padding:0 2px 14px 32px;
+  }
+
+  @media (max-width:520px){
+    #faq-header{padding:18px 18px 14px;}
+    #faq-chips{padding:10px 18px;}
+    #faq-body{padding:4px 18px 20px;}
+  }
 </style>
 </head>
 <body>
@@ -243,6 +384,7 @@
       </div>
     </div>
     <div id="specs">
+       <div class="row"><span class="k">Tahun Produksi</span> : <span class="v">2021</span></div>
       <div class="row"><span class="k">Transmisi</span> : <span class="v">Manual</span></div>
       <div class="row"><span class="k">Bahan Bakar</span> : <span class="v">Bensin</span></div>
       <div class="row"><span class="k">Kapasitas</span> : <span class="v">6 kursi</span></div>
@@ -280,6 +422,27 @@
   </div>
 
   <div id="toast"><span class="spin"></span><span id="toast-text">Memuat…</span></div>
+
+  <button id="faq-btn" title="Tanya jawab pembeli">
+    <span class="faq-icon">?</span>
+    <span class="faq-label-full">Tanya Jawab Pembeli</span>
+    <span class="faq-count">· 35</span>
+  </button>
+
+  <div id="faq-overlay">
+    <div id="faq-modal">
+      <div id="faq-header">
+        <div class="htext">
+          <div id="faq-eyebrow">Sebelum Membeli</div>
+          <div id="faq-title">Tanya Jawab Pembeli</div>
+          <div id="faq-sub">35 pertanyaan yang paling sering ditanyakan soal unit ini</div>
+        </div>
+        <button id="faq-close" title="Tutup">✕</button>
+      </div>
+      <div id="faq-chips"></div>
+      <div id="faq-body"></div>
+    </div>
+  </div>
 </div>
 
 <script type="importmap">
@@ -704,6 +867,162 @@ function animate() {
   renderer.render(scene, camera);
 }
 animate();
+
+// ---------- Tanya Jawab Pembeli (FAQ) ----------
+const FAQ_DATA = [
+  {
+    id: 'kondisi',
+    title: 'Kondisi Mobil',
+    items: [
+      { q: 'Tahun berapa mobil ini?', a: '2021.' },
+      { q: 'Berapa kilometer (odometer) saat ini?', a: '45.800 km, sesuai odometer terakhir.' },
+      { q: 'Apakah mobil bekas tabrakan?', a: 'Tidak, unit ini bebas tabrakan — cat dan rangka masih original, sudah dicek.' },
+      { q: 'Apakah pernah terkena banjir?', a: 'Tidak, tidak ada riwayat terendam banjir.' },
+      { q: 'Apakah mesin masih sehat?', a: 'Sehat, mesin sudah dicek mekanik, tarikan normal, tidak ada asap berlebih.' },
+      { q: 'Apakah ada kebocoran oli?', a: 'Tidak ada rembesan oli, baik pada blok mesin maupun transmisi.' },
+      { q: 'Bagaimana kondisi transmisi?', a: 'Perpindahan gigi (manual) halus, kopling masih empuk, belum ada gejala selip.' },
+      { q: 'Apakah AC masih dingin?', a: 'Dingin, freon dan kompresor dalam kondisi baik.' },
+      { q: 'Apakah kaki-kaki masih bagus?', a: 'Bagus, tidak ada bunyi gluduk saat melewati jalan tidak rata.' },
+      { q: 'Apakah ada kerusakan atau bunyi aneh?', a: 'Tidak ada, kondisi mesin dan kabin senyap saat berjalan.' },
+    ],
+  },
+  {
+    id: 'riwayat',
+    title: 'Riwayat Kendaraan',
+    items: [
+      { q: 'Berapa jumlah pemilik sebelumnya?', a: '1 pemilik (tangan pertama).' },
+      { q: 'Apakah servis rutin? Ada buku servis?', a: 'Rutin di bengkel resmi, buku servis lengkap tersedia.' },
+      { q: 'Apakah semua pajak masih hidup?', a: 'Ya, pajak tahunan maupun 5 tahunan masih aktif.' },
+      { q: 'Kapan STNK dan pajak berakhir?', a: 'Berlaku sampai 03/2027.' },
+      { q: 'Apakah BPKB asli dan lengkap?', a: 'Asli, atas nama pemilik langsung, tidak dalam status jaminan/leasing.' },
+    ],
+  },
+  {
+    id: 'kelengkapan',
+    title: 'Kelengkapan',
+    items: [
+      { q: 'Apakah kunci masih lengkap (cadangan)?', a: 'Lengkap, termasuk kunci cadangan.' },
+      { q: 'Ban masih tebal atau sudah harus diganti?', a: 'Masih tebal, kembang di atas 70%, belum perlu ganti dalam waktu dekat.' },
+      { q: 'Semua fitur elektronik berfungsi?', a: 'Berfungsi normal — power window, central lock, lampu, dan sebagainya.' },
+      { q: 'Audio, kamera mundur, dan sensor parkir masih normal?', a: 'Semua berfungsi normal sesuai standar bawaan pabrik.' },
+      { q: 'Apakah interior masih original?', a: 'Original, jok dan dashboard belum pernah diganti atau dimodifikasi.' },
+    ],
+  },
+  {
+    id: 'harga',
+    title: 'Harga dan Pembayaran',
+    items: [
+      { q: 'Berapa harga pasnya?', a: 'Rp172.000.000 — harga net setelah nego wajar.' },
+      { q: 'Masih bisa nego?', a: 'Bisa, dalam batas wajar sesuai kondisi unit.' },
+      { q: 'Bisa kredit?', a: 'Bisa, bekerja sama dengan leasing rekanan showroom.' },
+      { q: 'Berapa DP minimumnya?', a: 'Mulai 20–30% dari harga (kisaran Rp35–50 juta), tergantung tenor.' },
+      { q: 'Berapa cicilan per bulan?', a: 'Bervariasi tergantung DP dan tenor (1–5 tahun); simulasi dihitungkan saat konsultasi.' },
+    ],
+  },
+  {
+    id: 'penggunaan',
+    title: 'Penggunaan',
+    items: [
+      { q: 'Konsumsi BBM berapa km/liter?', a: 'Sekitar 12–15 km/liter untuk penggunaan campuran dalam kota/luar kota.' },
+      { q: 'Cocok untuk penggunaan harian?', a: 'Cocok, kabin luas (6 kursi) dan irit untuk mobilitas keluarga.' },
+      { q: 'Biaya servis dan sparepart mahal tidak?', a: 'Tergolong terjangkau, sparepart Toyota mudah didapat dengan harga bersaing.' },
+      { q: 'Apakah suku cadangnya mudah dicari?', a: 'Mudah, tersedia luas di bengkel resmi maupun umum se-Indonesia.' },
+      { q: 'Apakah mobil masih nyaman untuk perjalanan jauh?', a: 'Nyaman, suspensi cukup empuk dan kabin lega untuk keluarga.' },
+    ],
+  },
+  {
+    id: 'pemeriksaan',
+    title: 'Pemeriksaan',
+    items: [
+      { q: 'Boleh test drive?', a: 'Boleh, dengan perjanjian dan syarat yang berlaku di showroom.' },
+      { q: 'Boleh dicek di bengkel resmi?', a: 'Boleh, calon pembeli dipersilakan melakukan inspeksi independen.' },
+      { q: 'Ada garansi dari showroom?', a: 'Ada garansi mesin dan transmisi terbatas (contoh: 1 bulan/1.000 km, sesuai kebijakan showroom).' },
+      { q: 'Apa saja kekurangan mobil ini?', a: 'Contoh: ada baret halus di bumper belakang, karpet dasar sudah diganti baru.' },
+      { q: 'Mengapa mobil dijual?', a: 'Contoh: pemilik upgrade ke unit baru, atau menyesuaikan kebutuhan kendaraan lain.' },
+    ],
+  },
+];
+
+const faqBtn = document.getElementById('faq-btn');
+const faqOverlay = document.getElementById('faq-overlay');
+const faqCloseBtn = document.getElementById('faq-close');
+const faqChipsEl = document.getElementById('faq-chips');
+const faqBodyEl = document.getElementById('faq-body');
+
+function renderFAQ() {
+  faqChipsEl.innerHTML = '';
+  faqBodyEl.innerHTML = '';
+  let counter = 0;
+
+  FAQ_DATA.forEach((cat, idx) => {
+    const chip = document.createElement('button');
+    chip.className = 'faq-chip' + (idx === 0 ? ' active' : '');
+    chip.textContent = cat.title;
+    chip.addEventListener('click', () => {
+      document.getElementById(`faq-sec-${cat.id}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    faqChipsEl.appendChild(chip);
+
+    const section = document.createElement('div');
+    section.className = 'faq-section';
+    section.id = `faq-sec-${cat.id}`;
+
+    const heading = document.createElement('div');
+    heading.className = 'faq-section-title';
+    heading.textContent = cat.title;
+    section.appendChild(heading);
+
+    cat.items.forEach((item) => {
+      counter++;
+      const itemEl = document.createElement('div');
+      itemEl.className = 'faq-item';
+      itemEl.innerHTML = `
+        <button class="faq-q" type="button">
+          <span class="num">${counter}</span>
+          <span class="qtext">${item.q}</span>
+          <span class="chev">▾</span>
+        </button>
+        <div class="faq-a"><p>${item.a}</p></div>
+      `;
+      const qBtn = itemEl.querySelector('.faq-q');
+      const aEl = itemEl.querySelector('.faq-a');
+      qBtn.addEventListener('click', () => {
+        const isOpen = itemEl.classList.contains('open');
+        itemEl.classList.toggle('open', !isOpen);
+        aEl.style.maxHeight = !isOpen ? aEl.scrollHeight + 'px' : '0px';
+      });
+      section.appendChild(itemEl);
+    });
+
+    faqBodyEl.appendChild(section);
+  });
+
+  // sorot chip kategori sesuai section yang sedang terlihat saat scroll
+  const chipEls = faqChipsEl.querySelectorAll('.faq-chip');
+  const sectionEls = faqBodyEl.querySelectorAll('.faq-section');
+  const sectionObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const idx = [...sectionEls].indexOf(entry.target);
+        chipEls.forEach((c) => c.classList.remove('active'));
+        if (chipEls[idx]) chipEls[idx].classList.add('active');
+      });
+    },
+    { root: faqBodyEl, threshold: 0.25 }
+  );
+  sectionEls.forEach((s) => sectionObserver.observe(s));
+}
+
+function openFAQ() { faqOverlay.classList.add('open'); }
+function closeFAQ() { faqOverlay.classList.remove('open'); }
+
+faqBtn.addEventListener('click', openFAQ);
+faqCloseBtn.addEventListener('click', closeFAQ);
+faqOverlay.addEventListener('click', (e) => { if (e.target === faqOverlay) closeFAQ(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFAQ(); });
+
+renderFAQ();
 </script>
 </body>
 </html>
